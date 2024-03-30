@@ -1,0 +1,19 @@
+[project]
+name = "modo"
+version = "0.1.0"
+description = "A simple CLI work hours tracker."
+authors = [
+    {name = "Riley Thai", email = "rileythai@proton.me"},
+]
+dependencies = []
+requires-python = ">=3.8"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+
+[tool.pdm]
+distribution = true
