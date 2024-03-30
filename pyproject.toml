@@ -5,13 +5,13 @@ description = "A simple CLI work hours tracker."
 authors = [
     {name = "Riley Thai", email = "rileythai@proton.me"},
 ]
-dependencies = ["click>=8.1"]
+dependencies = ["typer>=9.0","pandas>=2.0.0","pyarrow>=10.0.0"]
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "MIT"}
 
 [project.scripts]
-modo = "modo:cli"
+modo = "modo:app"
 
 
 [build-system]
