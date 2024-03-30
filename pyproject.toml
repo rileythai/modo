@@ -5,10 +5,14 @@ description = "A simple CLI work hours tracker."
 authors = [
     {name = "Riley Thai", email = "rileythai@proton.me"},
 ]
-dependencies = []
+dependencies = ["click>=8.1"]
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "MIT"}
+
+[project.scripts]
+modo = "modo:cli"
+
 
 [build-system]
 requires = ["hatchling"]
