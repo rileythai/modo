@@ -5,9 +5,9 @@ import configparser
 def create_config():
     """Initializes a config with defaults."""
     datapath = f"{os.getenv('HOME')}/.local/share/modo/hours.parquet"
+    os.makedirs(os.path.dirname(datapath), exist_ok=True)
     configpath = f"{os.getenv('HOME')}/.config/modo/modo.ini"
     os.makedirs(os.path.dirname(configpath), exist_ok=True)
-    os.makedirs(os.path.dirname(datapath), exist_ok=True)
     config = configparser.ConfigParser()
     config["settings.data"] = {
         "path": datapath,
