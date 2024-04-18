@@ -9,11 +9,15 @@ from rich import print
 from rich.panel import Panel
 from rich.table import Table
 
-from modo.data import get_today
-
 from .util import visuals
+from .data import get_today, write, init_file
 
 app = typer.Typer()
+
+
+@app.command()
+def reset():
+    init_file()
 
 
 @app.command()
@@ -24,33 +28,50 @@ def hi(
                     typer.Option(help="Date to log for")] = None,
 ):
     """Set start of work hours for today or anyday"""
-    if time is None:
-        time = datetime.now().time()
+
+    # date not specified
+    if date is None:
+        date = datetime.now()
+    # date specified
     else:
-        if date is None:
-            time = datetime.today()
-            time.hour = time.split(":")[0]
-            time.minute = time.split(":")[1]
-        else:
-            time = datetime.today()
+        date = datetime.fromisoformat(date)
+
+    # time is specified
+    if time is not None:
+        date = date.replace(hour=int(time.split(":")[0]),
+                            minute=int(time.split(":")[1]))
+    else:
+        pass
+        # date = datetime.now()
 
     print(
         Panel(
-            f"\n\n:clock{time.hour if time.hour < 13 else time.hour - 12}: [bold green]Clock in set to {time.hour}:{time.minute}\n\n",
+            f"\n\n:clock{date.hour if date.hour < 13 else date.hour - 12}: [bold green]Clock in set to {date.hour}:{date.minute}\n\n",
             title=visuals["title"],
             # TODO: change to work if time and date are specified properly
             subtitle=datetime.today().date().isoformat(),
             highlight=True,
         ))
+    write(date=date.date().isoformat(), start=time)
 
 
 @app.command()
-def bye(time: Annotated[Optional[str], typer.Argument()] = None):
+def bye(
+    time: Annotated[Optional[str], typer.Argument()] = None,
+    date: Annotated[Optional[str],
+                    typer.Option(help="Date to log for")] = None,
+):
     """Set end of work hours for today or anyday"""
     if time is None:
         time = datetime.now().time()
     else:
-        time = datetime.strptime(time, "%H:%M")
+        if date is None:
+            date = datetime.today()
+            time.hour = time.split(":")[0]
+            time.minute = time.split(":")[1]
+        else:
+            date = datetime.today()
+            time = date.time()
 
     print(
         Panel(
@@ -60,6 +81,7 @@ def bye(time: Annotated[Optional[str], typer.Argument()] = None):
             highlight=True,
         ))
     status()
+    write(date=date, end=time)
 
 
 @app.command()
