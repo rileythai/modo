@@ -25,17 +25,18 @@ def hi(
                     typer.Option(help="Date to log for")] = None,
 ):
     """Set start of work hours for today or anyday"""
-    if time is None:
-        time = datetime.now()
-    else:
-        if date is None:
-            time = datetime.now()
-            time.hour = time.split(":")[0]
-            time.minute = time.split(":")[1]
-        else:
-            time = datetime.now()
-    write_start(time)
-    clock_in(time)
+    if date is None and time is None:
+        date = datetime.now()
+    elif date is None:
+        date = datetime.today()
+        date = date.replace(hour=int(time.split(":")[0]),
+                            minute=int(time.split(":")[1]))
+    else:  # manual spec of date and time
+        date = datetime.fromisoformat(date)
+        date = date.replace(hour=int(time.split(":")[0]),
+                            minute=int(time.split(":")[1]))
+    write_start(date)
+    clock_in(date)
 
 
 @app.command()
@@ -45,18 +46,19 @@ def bye(
                     typer.Option(help="Date to log for")] = None,
 ):
     """Set end of work hours for today or anyday"""
-    if time is None:
-        time = datetime.now()
-    else:
-        if date is None:
-            time = datetime.now()
-            time.hour = time.split(":")[0]
-            time.minute = time.split(":")[1]
-        else:
-            time = datetime.now()
+    if date is None and time is None:
+        date = datetime.now()
+    elif date is None:
+        date = datetime.today()
+        date = date.replace(hour=int(time.split(":")[0]),
+                            minute=int(time.split(":")[1]))
+    else:  # manual spec of date and time
+        date = datetime.fromisoformat(date)
+        date = date.replace(hour=int(time.split(":")[0]),
+                            minute=int(time.split(":")[1]))
 
-    write_end(time)
-    clock_out(time)
+    write_end(date)
+    clock_out(date)
 
 
 @app.command()
