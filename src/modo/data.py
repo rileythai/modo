@@ -10,10 +10,11 @@ and update to support numerous methods
 
 def init_file():
     """Create the default empty file"""
+    # TODO: set datapath from config
+    # https://unix.stackexchange.com/questions/312988/understanding-home-configuration-file-locations-config-and-local-sha
     datapath = f"{os.getenv('HOME')}/.local/share/modo/hours.parquet"
     os.makedirs(os.path.dirname(datapath), exist_ok=True)
     df = pd.DataFrame(columns=["date", "start", "end", "note"])
-    df = df.set_index("date")
 
     # TODO: read file format and datapath based on config file
     save(df)
@@ -40,54 +41,57 @@ def get_today(time: Optional[str] = None) -> pd.Series | None:
         today = datetime.today().date().isoformat()
     else:
         today = time
+    mask = df['date'] == today
     try:
-        return df.loc[today]
+        return df[mask].iloc[0]
     except KeyError:
         return None
 
 
-def test():
-    write(date="2023-04-19", start="09:33", end="11:40")
+def get_between_dates(start_date: str, end_date: str) -> pd.DataFrame:
+    """Get between different dates"""
     df = read()
-    print(df)
-    write(date="2023-04-20", start="09:33", note="foobar")
-    df = read()
-    print(df)
-    write(date="2023-04-20", start="09:33", end="10:40")
-    df = read()
-    print(df)
+    mask = (df['date'] > start_date) & (df['date'] <= end_date)
+    dff = df[mask]
+    return dff if len(dff) > 0 else None
 
 
-def write(**kwargs) -> None:
+def write(**patch) -> None:
     """Write a row to the dataframe"""
+    # TODO: change this to not use pandas at all
     df = read()
-    patch = [None] * len(df.columns)  # has to be preassigned
+    columns = ['date', 'start', 'end', 'note']
 
     # ensure date is set
     try:
-        date = kwargs["date"]
+        date = patch["date"]
     except KeyError:
-        raise ValueError("must specify a date for patch")
+        raise ValueError("error in write, date isn't specified for entry")
 
-    # create patch from attributes
-    for i, col in enumerate(df.columns):
-        try:
-            patch[i] = kwargs[col]
-        except KeyError:
-            continue
+    patch.update((k, None) for k in columns if k not in patch.keys())
 
     # append current data if exists, else just patch
     try:
-        current = df.loc[date]
-        for i, part in enumerate(current):
-            if patch[i] is None:
-                patch[i] = current[i]
+        current = df[df['date'] == date]
+        assert len(current) > 0, 'zero length exit case'
 
-    except KeyError:
-        pass
-    df.loc[date] = patch
+        # if we're two entries on a day, then we need to get the last one
+        if len(current) > 1:
+            current = current[current.index == current.index.values[-1]]
 
-    save(df)
+        # add if not in the current
+        for col in current.columns:
+            if current[col].values[0] is None:
+                print('adding', patch[col], 'to', col)
+                current[col] = [patch[col]]
+        df.iloc[current.index.values[0]] = current.iloc[0]  # set to series
+
+    except AssertionError as e:
+        df = pd.concat((df, pd.DataFrame(dict(**patch), index=pd.Index([0]))),
+                       axis=0,
+                       ignore_index=True)
+    finally:
+        save(df)
 
 
 def write_start(time: datetime) -> None:
